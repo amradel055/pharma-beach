@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(magick:*)",
+      "Bash(convert:*)",
+      "WebFetch(domain:lovable.dev)"
+    ]
+  }
+}
