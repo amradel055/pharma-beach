@@ -224,6 +224,67 @@
         </button>
       </div>
     </section>
+
+    <!-- About Section -->
+    <section :class="['about', { 'in-view': aboutVisible }]" ref="aboutRef">
+      <div class="about-container">
+        <div class="about-text">
+          <span class="about-tag">من نحن</span>
+          <h2 class="about-title">نبذة عن <span>القرية</span></h2>
+          <p class="about-desc">
+            تقع قرية فارما بيتش ريزورت على ساحل البحر الأبيض المتوسط، وتوفر تجربة إقامة فاخرة
+            تجمع بين الراحة والاستجمام. تضم القرية مجموعة من الشاليهات الحديثة المجهزة بالكامل،
+            مع خدمات متميزة على مدار الساعة لضمان راحتكم.
+          </p>
+
+          <div class="about-stats">
+            <div class="about-stat">
+              <div class="stat-icon"><i class="pi pi-calendar" /></div>
+              <div class="stat-content">
+                <span class="stat-num">+10</span>
+                <span class="stat-label">سنوات خبرة</span>
+              </div>
+            </div>
+            <div class="about-stat">
+              <div class="stat-icon stat-icon--blue"><i class="pi pi-building" /></div>
+              <div class="stat-content">
+                <span class="stat-num">+50</span>
+                <span class="stat-label">شاليه فاخر</span>
+              </div>
+            </div>
+            <div class="about-stat">
+              <div class="stat-icon stat-icon--green"><i class="pi pi-users" /></div>
+              <div class="stat-content">
+                <span class="stat-num">+1200</span>
+                <span class="stat-label">عميل سعيد</span>
+              </div>
+            </div>
+          </div>
+
+          <a href="#" class="about-link">
+            اقرأ المزيد
+            <i class="pi pi-arrow-down" />
+          </a>
+        </div>
+
+        <div class="about-visual">
+          <div class="about-deco" />
+          <div class="about-img-main">
+            <img src="https://picsum.photos/seed/pharma-resort-view/700/500" alt="فارما بيتش ريزورت" loading="lazy" />
+            <button class="about-play" aria-label="تشغيل الفيديو">
+              <i class="pi pi-play-fill" />
+            </button>
+          </div>
+          <div class="about-img-float">
+            <img src="https://picsum.photos/seed/pharma-pool-view/400/300" alt="المسبح" loading="lazy" />
+          </div>
+          <div class="about-badge">
+            <span class="badge-num">+10</span>
+            <span class="badge-txt">سنوات خبرة</span>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -324,8 +385,20 @@ async function startShowcase() {
   }
 }
 
-onMounted(startShowcase)
-onUnmounted(() => { running = false })
+// ---- About Section: scroll entrance ----
+const aboutRef = ref(null)
+const aboutVisible = ref(false)
+let aboutObserver = null
+
+onMounted(() => {
+  startShowcase()
+  aboutObserver = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) { aboutVisible.value = true; aboutObserver.disconnect() } },
+    { threshold: 0.15 }
+  )
+  if (aboutRef.value) aboutObserver.observe(aboutRef.value)
+})
+onUnmounted(() => { running = false; aboutObserver?.disconnect() })
 
 // ---- Discover Section ----
 const swiperModules = [Navigation, Autoplay, EffectCoverflow]
@@ -1316,6 +1389,438 @@ function goToSlide(idx) {
   .dtab {
     font-size: 0.8rem;
     padding: 0.4rem 1rem;
+  }
+}
+
+/* ========================================
+   ABOUT SECTION
+   ======================================== */
+.about {
+  padding: 7rem 0 8rem;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 5rem;
+}
+
+/* ---- Text Side ---- */
+.about-text {
+  flex: 1;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.about.in-view .about-text {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.about-tag {
+  display: inline-block;
+  padding: 0.35rem 1.1rem;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.08);
+  border: 1.5px solid rgba(var(--primary-rgb), 0.2);
+}
+
+.about-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 1rem;
+  line-height: 1.3;
+}
+
+.about-title span {
+  color: var(--primary);
+}
+
+.about-desc {
+  font-size: 1.05rem;
+  line-height: 1.9;
+  color: #475569;
+  font-weight: 500;
+  margin-top: 1.25rem;
+}
+
+/* ---- Stats: Glass Cards ---- */
+.about-stats {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+}
+
+.about-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  transition: all 0.35s ease;
+}
+
+.about-stat:hover {
+  background: rgba(var(--primary-rgb), 0.04);
+  border-color: rgba(var(--primary-rgb), 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.12), rgba(var(--primary-rgb), 0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.stat-icon--blue {
+  background: linear-gradient(135deg, rgba(var(--secondary-rgb), 0.12), rgba(var(--secondary-rgb), 0.04));
+  color: var(--secondary);
+}
+
+.stat-icon--green {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.04));
+  color: #16a34a;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.stat-num {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.76rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Link */
+.about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: gap 0.3s ease;
+}
+
+.about-link:hover {
+  gap: 0.85rem;
+}
+
+.about-link i {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.about-link:hover i {
+  transform: translateY(3px);
+}
+
+/* ---- Visual Side ---- */
+.about-visual {
+  flex: 1.15;
+  position: relative;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s;
+}
+
+.about.in-view .about-visual {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Decorative Gradient Blob */
+.about-deco {
+  position: absolute;
+  width: 115%;
+  height: 115%;
+  top: -8%;
+  right: -12%;
+  background: radial-gradient(
+    ellipse at 55% 50%,
+    rgba(var(--primary-rgb), 0.07) 0%,
+    rgba(var(--secondary-rgb), 0.04) 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  z-index: 0;
+  filter: blur(30px);
+}
+
+/* Main Image */
+.about-img-main {
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(0, 0, 0, 0.04);
+  transform: rotate(1.5deg);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.about-img-main:hover {
+  transform: rotate(0deg);
+}
+
+.about-img-main > img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 7 / 5;
+  object-fit: cover;
+  transition: transform 6s ease;
+}
+
+.about-img-main:hover > img {
+  transform: scale(1.06);
+}
+
+/* Play Button — Double Ring Pulse */
+.about-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.3rem;
+  color: var(--primary);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.about-play::before,
+.about-play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  z-index: -1;
+}
+
+.about-play::before {
+  animation: play-ring 2.5s ease-out infinite;
+}
+
+.about-play::after {
+  animation: play-ring 2.5s ease-out 0.9s infinite;
+}
+
+@keyframes play-ring {
+  0% { transform: scale(1); opacity: 0.7; border-width: 2px; }
+  100% { transform: scale(2); opacity: 0; border-width: 0.5px; }
+}
+
+.about-play:hover {
+  background: var(--primary);
+  color: #fff;
+  transform: translate(-50%, -50%) scale(1.12);
+  box-shadow: 0 12px 40px rgba(var(--primary-rgb), 0.4);
+}
+
+/* Floating Image — Tilted */
+.about-img-float {
+  position: absolute;
+  bottom: -2.5rem;
+  left: -2.5rem;
+  width: 42%;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 5px solid #fff;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14);
+  z-index: 3;
+  transform: rotate(-3deg);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.about-img-float:hover {
+  transform: rotate(0deg) scale(1.04);
+}
+
+.about-img-float img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+/* Badge — Tilted Gradient */
+.about-badge {
+  position: absolute;
+  top: -1.5rem;
+  right: -1.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  padding: 1.1rem 1.6rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 12px 32px rgba(var(--primary-rgb), 0.35);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  transform: rotate(4deg);
+  transition: transform 0.35s ease;
+}
+
+.about-badge:hover {
+  transform: rotate(0deg) scale(1.06);
+}
+
+.badge-num {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.badge-txt {
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* ---- About Responsive ---- */
+@media (max-width: 1024px) {
+  .about-container {
+    gap: 3rem;
+  }
+
+  .about-title {
+    font-size: 2.1rem;
+  }
+
+  .about-stats {
+    flex-wrap: wrap;
+  }
+
+  .about-img-float {
+    left: -1rem;
+    width: 38%;
+  }
+
+  .about-badge {
+    right: -0.5rem;
+    top: -1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .about {
+    padding: 4rem 0 5rem;
+  }
+
+  .about-container {
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .about-text {
+    text-align: center;
+  }
+
+  .about-title {
+    font-size: 2rem;
+  }
+
+  .about-stats {
+    justify-content: center;
+  }
+
+  .about-link {
+    justify-content: center;
+  }
+
+  .about-visual {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .about-img-main {
+    transform: rotate(0deg);
+  }
+
+  .about-img-float {
+    bottom: -1.5rem;
+    left: -0.5rem;
+    width: 38%;
+    border-width: 4px;
+    transform: rotate(-2deg);
+  }
+
+  .about-badge {
+    right: -0.5rem;
+    top: -0.75rem;
+    padding: 0.8rem 1.2rem;
+    transform: rotate(3deg);
+  }
+
+  .badge-num {
+    font-size: 1.4rem;
+  }
+
+  .about-play {
+    width: 56px;
+    height: 56px;
+    font-size: 1rem;
+  }
+
+  .about-stat {
+    padding: 0.7rem 0.9rem;
+  }
+
+  .stat-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
+  }
+
+  .stat-num {
+    font-size: 1.15rem;
   }
 }
 </style>
