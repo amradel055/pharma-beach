@@ -37,6 +37,20 @@ const routes = [
     ],
   },
 
+  // Booking wizard
+  {
+    path: '/booking',
+    component: NestedLayout,
+    children: [
+      {
+        path: '',
+        name: 'booking',
+        component: () => import('@/views/BookingView.vue'),
+        meta: { title: 'البحث عن شاليه' },
+      },
+    ],
+  },
+
   // Nested layout — different navbar, no footer
   {
     path: '/app',
