@@ -336,6 +336,112 @@
         </div>
       </div>
     </section>
+
+    <!-- Location Section -->
+    <section class="location">
+      <div class="location-header">
+        <span class="location-tag">الموقع</span>
+        <h2 class="location-title">موقعنا على <span>الخريطة</span></h2>
+        <p class="location-sub">يسهل الوصول إلينا من القاهرة والإسكندرية عبر طريق الساحل الشمالي</p>
+      </div>
+
+      <div class="location-map-wrap">
+        <!-- Full-width Map -->
+        <div class="location-map">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d217988.4511519507!2d28.5!3d31.05!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzHCsDAzJzAwLjAiTiAyOMKwMzAnMDAuMCJF!5e0!3m2!1sar!2seg!4v1700000000000"
+            width="100%"
+            height="100%"
+            style="border:0"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+          />
+        </div>
+
+        <!-- Glass info card floating over map -->
+        <div class="location-card">
+          <div class="location-card-head">
+            <div class="location-card-icon">
+              <i class="pi pi-map-marker" />
+            </div>
+            <div>
+              <h3 class="location-card-title">فارما بيتش ريزورت</h3>
+              <p class="location-card-sub">الساحل الشمالي — الكيلو 120، مصر</p>
+            </div>
+          </div>
+
+          <div class="location-card-items">
+            <div class="loc-item">
+              <i class="pi pi-phone" />
+              <span dir="ltr">+20 123 456 7890</span>
+            </div>
+            <div class="loc-item">
+              <i class="pi pi-clock" />
+              <span>24 ساعة / 7 أيام</span>
+            </div>
+            <div class="loc-item">
+              <i class="pi pi-envelope" />
+              <span dir="ltr">info@pharmabeach.com</span>
+            </div>
+          </div>
+
+          <a href="https://maps.google.com" target="_blank" rel="noopener" class="map-btn">
+            <i class="pi pi-directions" />
+            افتح في خرائط جوجل
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section :class="['cta', { 'in-view': ctaVisible }]" ref="ctaRef">
+      <div class="cta-container">
+        <div class="cta-glow-wrap">
+          <span class="cta-glow-ring" />
+        </div>
+        <div class="cta-card">
+          <!-- Animated gradient overlay -->
+          <div class="cta-gradient-bg" />
+
+          <!-- Animated floating shapes -->
+          <div class="cta-shapes">
+            <span class="cta-shape cta-shape--1" />
+            <span class="cta-shape cta-shape--2" />
+            <span class="cta-shape cta-shape--3" />
+            <span class="cta-shape cta-shape--4" />
+            <span class="cta-shape cta-shape--5" />
+          </div>
+
+          <!-- Floating particles -->
+          <div class="cta-particles">
+            <span v-for="n in 12" :key="n" :class="'cta-particle cta-particle--' + n" />
+          </div>
+
+          <!-- Animated border -->
+          <div class="cta-border-glow" />
+
+          <div class="cta-inner">
+            <span class="cta-badge">
+              <i class="pi pi-bolt" />
+              عروض لفترة محدودة
+            </span>
+            <h2 class="cta-title">جاهز لعطلة <span>لا تُنسى</span> ؟</h2>
+            <p class="cta-desc">احجز شاليهك الآن واستمتع بأفضل العروض الحصرية على فارما بيتش ريزورت</p>
+            <div class="cta-actions">
+              <RouterLink to="/booking" class="cta-btn">
+                <span class="cta-btn-text">احجز الآن — عروض محدودة</span>
+                <i class="pi pi-arrow-left" />
+              </RouterLink>
+              <a href="tel:+201234567890" class="cta-phone">
+                <i class="pi pi-phone" />
+                اتصل بنا
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -441,6 +547,11 @@ const aboutRef = ref(null)
 const aboutVisible = ref(false)
 let aboutObserver = null
 
+// ---- CTA Section: scroll entrance ----
+const ctaRef = ref(null)
+const ctaVisible = ref(false)
+let ctaObserver = null
+
 // ---- Features Section: sticky scroll ----
 const featRef = ref(null)
 const activeFeature = ref(0)
@@ -479,12 +590,18 @@ onMounted(() => {
     { threshold: 0.15 }
   )
   if (aboutRef.value) aboutObserver.observe(aboutRef.value)
+  ctaObserver = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) { ctaVisible.value = true; ctaObserver.disconnect() } },
+    { threshold: 0.15 }
+  )
+  if (ctaRef.value) ctaObserver.observe(ctaRef.value)
   window.addEventListener('scroll', onFeatScroll, { passive: true })
   featuresData.forEach(f => { const img = new Image(); img.src = f.img })
 })
 onUnmounted(() => {
   running = false
   aboutObserver?.disconnect()
+  ctaObserver?.disconnect()
   window.removeEventListener('scroll', onFeatScroll)
 })
 
@@ -2239,6 +2356,816 @@ function goToSlide(idx) {
 
   .feat-item {
     font-size: 0.85rem;
+  }
+}
+
+/* ========================================
+   LOCATION SECTION
+   ======================================== */
+.location {
+  padding: 6rem 0 0;
+  background: #fff;
+  position: relative;
+}
+
+.location-header {
+  text-align: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.location-tag {
+  display: inline-block;
+  padding: 0.35rem 1.1rem;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.08);
+  border: 1.5px solid rgba(var(--primary-rgb), 0.2);
+}
+
+.location-title {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 0.75rem;
+  line-height: 1.35;
+}
+
+.location-title span {
+  color: var(--primary);
+}
+
+.location-sub {
+  color: #64748b;
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-top: 0.6rem;
+}
+
+/* ---- Map Wrapper (full-width with glass card overlay) ---- */
+.location-map-wrap {
+  position: relative;
+  margin-top: 3rem;
+  height: 520px;
+}
+
+.location-map {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px 24px 0 0;
+  overflow: hidden;
+}
+
+.location-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Floating Glass Card ---- */
+.location-card {
+  position: absolute;
+  top: 2rem;
+  right: max(2rem, calc((100vw - 1280px) / 2 + 2rem));
+  z-index: 10;
+  width: 360px;
+  max-width: calc(100% - 4rem);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.1),
+    0 6px 20px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Card header: icon + title */
+.location-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.location-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
+}
+
+.location-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.location-card-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  margin: 0.1rem 0 0;
+  line-height: 1.4;
+}
+
+/* Contact items */
+.location-card-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.loc-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.85rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.loc-item i {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* Map Button */
+.map-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.3);
+  transition: all 0.3s ease;
+}
+
+.map-btn:hover {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-darker));
+  box-shadow: 0 6px 24px rgba(var(--primary-rgb), 0.4);
+  transform: translateY(-2px);
+}
+
+.map-btn i {
+  font-size: 0.85rem;
+}
+
+/* ---- Location Responsive ---- */
+@media (max-width: 1024px) {
+  .location-card {
+    width: 320px;
+  }
+
+  .location-title {
+    font-size: 2.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .location {
+    padding: 4rem 0 0;
+  }
+
+  .location-map-wrap {
+    height: auto;
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .location-map {
+    position: relative;
+    height: 300px;
+    border-radius: 0;
+  }
+
+  .location-card {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: calc(100% - 2rem);
+    max-width: none;
+    margin: -2rem auto 0;
+    border-radius: 18px;
+    z-index: 10;
+  }
+
+  .location-title {
+    font-size: 2rem;
+  }
+}
+
+/* ========================================
+   CTA SECTION
+   ======================================== */
+.cta {
+  padding: 6rem 0;
+  background: #fff;
+}
+
+.cta-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  position: relative;
+}
+
+/* Pulsing glow ring behind the card */
+.cta-glow-wrap {
+  position: absolute;
+  inset: -20px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease 0.3s;
+}
+
+.cta.in-view .cta-glow-wrap {
+  opacity: 1;
+}
+
+.cta-glow-ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 40px;
+  background: linear-gradient(135deg, rgba(var(--secondary-rgb), 0.2), rgba(var(--primary-rgb), 0.15), rgba(var(--secondary-rgb), 0.2));
+  filter: blur(30px);
+  animation: cta-glow-pulse 4s ease-in-out infinite;
+}
+
+@keyframes cta-glow-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* Card — entrance animation */
+.cta-card {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, var(--secondary) 0%, #0077b6 50%, #023e8a 100%);
+  border-radius: 32px;
+  padding: 5rem 3rem;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(50px) scale(0.97);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta.in-view .cta-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Animated gradient overlay that shifts */
+.cta-gradient-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--primary-rgb), 0.08) 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.05) 60%,
+    rgba(var(--primary-rgb), 0.06) 100%
+  );
+  background-size: 200% 200%;
+  animation: cta-gradient-shift 6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: 32px;
+}
+
+@keyframes cta-gradient-shift {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+/* Animated border glow */
+.cta-border-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 1s ease 0.5s;
+}
+
+.cta.in-view .cta-border-glow {
+  opacity: 1;
+}
+
+.cta-border-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  padding: 1.5px;
+  background: linear-gradient(
+    var(--cta-border-angle, 0deg),
+    rgba(255, 255, 255, 0.3),
+    transparent 40%,
+    transparent 60%,
+    rgba(var(--primary-rgb), 0.4)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: cta-border-rotate 5s linear infinite;
+}
+
+@keyframes cta-border-rotate {
+  to { --cta-border-angle: 360deg; }
+}
+
+@property --cta-border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Animated floating shapes */
+.cta-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 32px;
+}
+
+.cta-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.cta.in-view .cta-shape {
+  opacity: 1;
+}
+
+.cta-shape--1 {
+  width: 300px;
+  height: 300px;
+  top: -80px;
+  right: -60px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+  animation: cta-float-1 8s ease-in-out infinite;
+}
+
+.cta-shape--2 {
+  width: 200px;
+  height: 200px;
+  bottom: -40px;
+  left: 5%;
+  background: radial-gradient(circle, rgba(var(--primary-rgb), 0.18) 0%, transparent 70%);
+  animation: cta-float-2 10s ease-in-out infinite;
+}
+
+.cta-shape--3 {
+  width: 120px;
+  height: 120px;
+  top: 20%;
+  left: 15%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: cta-float-3 7s ease-in-out infinite;
+}
+
+.cta-shape--4 {
+  width: 80px;
+  height: 80px;
+  top: 60%;
+  right: 20%;
+  background: radial-gradient(circle, rgba(var(--primary-rgb), 0.14) 0%, transparent 70%);
+  animation: cta-float-4 9s ease-in-out infinite;
+}
+
+.cta-shape--5 {
+  width: 160px;
+  height: 160px;
+  top: 10%;
+  left: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.07) 0%, transparent 70%);
+  animation: cta-float-5 12s ease-in-out infinite;
+}
+
+@keyframes cta-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-30px, 20px) scale(1.1); }
+  66% { transform: translate(15px, -10px) scale(1.05); }
+}
+
+@keyframes cta-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(25px, -30px) scale(1.15); }
+  66% { transform: translate(-10px, 15px) scale(0.95); }
+}
+
+@keyframes cta-float-3 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(15px, 15px) rotate(45deg); }
+}
+
+@keyframes cta-float-4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-20px, -15px) scale(1.3); }
+}
+
+@keyframes cta-float-5 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-20px, 25px) rotate(60deg); }
+}
+
+/* Floating particles */
+.cta-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 32px;
+}
+
+.cta-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+}
+
+.cta.in-view .cta-particle {
+  animation: cta-particle-rise linear infinite;
+}
+
+.cta-particle--1  { left: 8%;  bottom: -5%; animation-duration: 6s;  animation-delay: 0s;   }
+.cta-particle--2  { left: 15%; bottom: -5%; animation-duration: 8s;  animation-delay: 1s;   width: 2px; height: 2px; }
+.cta-particle--3  { left: 25%; bottom: -5%; animation-duration: 7s;  animation-delay: 0.5s; }
+.cta-particle--4  { left: 35%; bottom: -5%; animation-duration: 9s;  animation-delay: 2s;   width: 4px; height: 4px; background: rgba(var(--primary-rgb), 0.4); }
+.cta-particle--5  { left: 45%; bottom: -5%; animation-duration: 6.5s; animation-delay: 0.8s; }
+.cta-particle--6  { left: 55%; bottom: -5%; animation-duration: 8.5s; animation-delay: 1.5s; width: 2px; height: 2px; }
+.cta-particle--7  { left: 65%; bottom: -5%; animation-duration: 7.5s; animation-delay: 0.3s; }
+.cta-particle--8  { left: 72%; bottom: -5%; animation-duration: 10s; animation-delay: 2.5s; width: 4px; height: 4px; background: rgba(var(--primary-rgb), 0.35); }
+.cta-particle--9  { left: 80%; bottom: -5%; animation-duration: 6.8s; animation-delay: 1.2s; }
+.cta-particle--10 { left: 88%; bottom: -5%; animation-duration: 9.5s; animation-delay: 0.7s; width: 2px; height: 2px; }
+.cta-particle--11 { left: 20%; bottom: -5%; animation-duration: 11s; animation-delay: 3s;   width: 2px; height: 2px; background: rgba(var(--primary-rgb), 0.3); }
+.cta-particle--12 { left: 50%; bottom: -5%; animation-duration: 7.2s; animation-delay: 1.8s; }
+
+@keyframes cta-particle-rise {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { opacity: 0.4; }
+  90% { opacity: 0; }
+  100% { transform: translateY(-500px) translateX(20px); opacity: 0; }
+}
+
+/* Inner content */
+.cta-inner {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Scroll entrance — staggered slide-up */
+.cta-badge,
+.cta-title,
+.cta-desc,
+.cta-actions {
+  opacity: 0;
+  transform: translateY(35px);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cta.in-view .cta-badge {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.3s;
+}
+
+.cta.in-view .cta-title {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.5s;
+}
+
+.cta.in-view .cta-desc {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.7s;
+}
+
+.cta.in-view .cta-actions {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.9s;
+}
+
+/* Badge — with pulse animation */
+.cta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1.3rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  animation: cta-badge-pulse 3s ease-in-out infinite;
+}
+
+@keyframes cta-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.15); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0); }
+}
+
+.cta-badge i {
+  font-size: 0.75rem;
+  color: var(--primary);
+  animation: cta-bolt-flash 2s ease-in-out infinite;
+}
+
+@keyframes cta-bolt-flash {
+  0%, 70%, 100% { opacity: 1; }
+  80% { opacity: 0.3; }
+  90% { opacity: 1; }
+}
+
+/* Title */
+.cta-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.35;
+}
+
+.cta-title span {
+  background: linear-gradient(135deg, var(--primary), #fbbf24, var(--primary));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: cta-text-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes cta-text-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Description */
+.cta-desc {
+  font-size: 1.08rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  line-height: 1.8;
+  max-width: 520px;
+}
+
+/* Actions */
+.cta-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* CTA Button — with shine, glow pulse, and arrow bounce */
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 6px 28px rgba(var(--primary-rgb), 0.45);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: cta-btn-glow 3s ease-in-out infinite;
+}
+
+@keyframes cta-btn-glow {
+  0%, 100% { box-shadow: 0 6px 28px rgba(var(--primary-rgb), 0.45); }
+  50% { box-shadow: 0 6px 40px rgba(var(--primary-rgb), 0.65), 0 0 60px rgba(var(--primary-rgb), 0.15); }
+}
+
+.cta-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cta-btn:hover::before {
+  opacity: 1;
+}
+
+.cta-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: cta-shine 3s ease-in-out infinite;
+}
+
+@keyframes cta-shine {
+  0%, 60%, 100% { right: -100%; }
+  30% { right: 120%; }
+}
+
+.cta-btn:hover {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-darker));
+  box-shadow: 0 8px 40px rgba(var(--primary-rgb), 0.6);
+  transform: translateY(-3px) scale(1.03);
+  animation: none;
+}
+
+.cta-btn:hover::after {
+  animation: none;
+  opacity: 0;
+}
+
+.cta-btn-text {
+  position: relative;
+  z-index: 1;
+}
+
+.cta-btn i {
+  font-size: 0.85rem;
+  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 1;
+  animation: cta-arrow-nudge 2s ease-in-out infinite;
+}
+
+@keyframes cta-arrow-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+
+.cta-btn:hover i {
+  animation: none;
+  transform: translateX(-6px);
+}
+
+/* Phone link — with ring animation */
+.cta-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-phone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cta-phone:hover::after {
+  opacity: 1;
+}
+
+.cta-phone:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cta-phone i {
+  font-size: 0.9rem;
+  animation: cta-phone-ring 3s ease-in-out infinite;
+}
+
+@keyframes cta-phone-ring {
+  0%, 100% { transform: rotate(0deg); }
+  5% { transform: rotate(15deg); }
+  10% { transform: rotate(-15deg); }
+  15% { transform: rotate(12deg); }
+  20% { transform: rotate(-8deg); }
+  25% { transform: rotate(0deg); }
+}
+
+@media (max-width: 768px) {
+  .cta {
+    padding: 4rem 0;
+  }
+
+  .cta-card {
+    padding: 3.5rem 1.5rem;
+    border-radius: 24px;
+  }
+
+  .cta-gradient-bg,
+  .cta-shapes,
+  .cta-particles,
+  .cta-border-glow {
+    border-radius: 24px;
+  }
+
+  .cta-glow-ring {
+    border-radius: 32px;
+  }
+
+  .cta-title {
+    font-size: 1.9rem;
+  }
+
+  .cta-desc {
+    font-size: 0.95rem;
+  }
+
+  .cta-btn {
+    padding: 0.85rem 2rem;
+    font-size: 0.92rem;
+  }
+
+  .cta-phone {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.88rem;
+  }
+
+  .cta-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cta-btn,
+  .cta-phone {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cta-particle {
+    display: none;
   }
 }
 </style>

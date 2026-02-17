@@ -6,7 +6,11 @@
       "Bash(convert:*)",
       "WebFetch(domain:lovable.dev)",
       "Bash(npm install:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "WebSearch",
+      "WebFetch(domain:designmodo.com)",
+      "WebFetch(domain:www.eleken.co)",
+      "WebFetch(domain:dribbble.com)"
     ]
   }
 }
