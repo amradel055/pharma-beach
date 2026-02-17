@@ -168,11 +168,71 @@
         </div>
       </div>
     </section>
+
+    <!-- Discover Section -->
+    <section id="discover" class="discover">
+      <div class="discover-header">
+        <h2 class="discover-title">اكتشف <span>جمال</span> القرية</h2>
+        <p class="discover-sub">استمتع بمرافق متنوعة تلبي جميع احتياجاتك</p>
+      </div>
+
+      <div class="discover-tabs">
+        <button
+          v-for="(cat, i) in categories"
+          :key="cat.id"
+          :class="['dtab', { active: activeCat === i }]"
+          @click="goToSlide(i)"
+        >{{ cat.label }}</button>
+      </div>
+
+      <div class="discover-carousel">
+        <Swiper
+          :modules="swiperModules"
+          :slides-per-view="1.4"
+          :centered-slides="true"
+          :space-between="24"
+          :loop="true"
+          :speed="650"
+          :grab-cursor="true"
+          :autoplay="{ delay: 4000, disableOnInteraction: false, pauseOnMouseEnter: true }"
+          :navigation="{ nextEl: '.nav-next', prevEl: '.nav-prev' }"
+          :breakpoints="{
+            768: { slidesPerView: 1.6, spaceBetween: 30 },
+            1024: { slidesPerView: 2.2, spaceBetween: 36 },
+          }"
+          effect="coverflow"
+          :coverflow-effect="{ rotate: 4, stretch: 0, depth: 180, modifier: 1, slideShadows: false }"
+          @swiper="onSwiper"
+          @slideChange="onSlideChange"
+        >
+          <SwiperSlide v-for="item in galleryItems" :key="item.id">
+            <div class="dcard">
+              <img :src="item.img" :alt="item.title" loading="lazy" />
+              <div class="dcard-info">
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.desc }}</p>
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
+
+        <button class="carousel-nav nav-prev" aria-label="السابق">
+          <i class="pi pi-chevron-right" />
+        </button>
+        <button class="carousel-nav nav-next" aria-label="التالي">
+          <i class="pi pi-chevron-left" />
+        </button>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Navigation, Autoplay, EffectCoverflow } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/effect-coverflow'
 import heroBg from '@/assets/images/hero-bg.jpg'
 import heroImg from '@/assets/images/hero-1.jpg'
 
@@ -266,6 +326,42 @@ async function startShowcase() {
 
 onMounted(startShowcase)
 onUnmounted(() => { running = false })
+
+// ---- Discover Section ----
+const swiperModules = [Navigation, Autoplay, EffectCoverflow]
+let swiperInstance = null
+
+const categories = [
+  { id: 'pool', label: 'مسبح' },
+  { id: 'beach', label: 'شاطئ خاص' },
+  { id: 'chalets', label: 'شاليهات' },
+  { id: 'restaurants', label: 'مطاعم' },
+  { id: 'waterGames', label: 'ألعاب مائية' },
+  { id: 'gardens', label: 'حدائق' },
+]
+
+const galleryItems = [
+  { id: 1, title: 'المسبح الرئيسي', desc: 'استرخاء وسباحة بلا حدود', img: 'https://picsum.photos/seed/pharma-pool/800/500' },
+  { id: 2, title: 'الشاطئ الخاص', desc: 'رمال ذهبية وأمواج هادئة', img: 'https://picsum.photos/seed/pharma-beach/800/500' },
+  { id: 3, title: 'الشاليهات', desc: 'إقامة فاخرة بإطلالة بحرية', img: 'https://picsum.photos/seed/pharma-chalet/800/500' },
+  { id: 4, title: 'المطعم', desc: 'مأكولات عالمية وأجواء ساحرة', img: 'https://picsum.photos/seed/pharma-dining/800/500' },
+  { id: 5, title: 'الألعاب المائية', desc: 'مغامرات ومرح للجميع', img: 'https://picsum.photos/seed/pharma-water/800/500' },
+  { id: 6, title: 'الحدائق', desc: 'طبيعة خلابة واسترخاء', img: 'https://picsum.photos/seed/pharma-garden/800/500' },
+]
+
+const activeCat = ref(0)
+
+function onSwiper(swiper) {
+  swiperInstance = swiper
+}
+
+function onSlideChange(swiper) {
+  activeCat.value = swiper.realIndex
+}
+
+function goToSlide(idx) {
+  if (swiperInstance) swiperInstance.slideToLoop(idx, 650)
+}
 </script>
 
 <style scoped>
@@ -1003,6 +1099,223 @@ onUnmounted(() => { running = false })
       rgba(0, 0, 0, 0.15) 50%,
       rgba(0, 0, 0, 0.1) 100%
     );
+  }
+}
+
+/* ========================================
+   DISCOVER SECTION
+   ======================================== */
+.discover {
+  padding: 6rem 0 5rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+  overflow: hidden;
+}
+
+.discover-header {
+  text-align: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.discover-title {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.discover-title span {
+  color: var(--primary);
+}
+
+.discover-sub {
+  color: #64748b;
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-top: 0.6rem;
+}
+
+/* ---- Tabs ---- */
+.discover-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  padding: 0 2rem;
+}
+
+.dtab {
+  padding: 0.5rem 1.3rem;
+  border-radius: 50px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dtab:hover {
+  border-color: rgba(var(--primary-rgb), 0.35);
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.04);
+}
+
+.dtab.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
+  transform: scale(1.05);
+}
+
+/* ---- Swiper Carousel ---- */
+.discover-carousel {
+  position: relative;
+  max-width: 1280px;
+  margin: 3rem auto 0;
+  padding: 1rem 0 2rem;
+}
+
+.discover-carousel :deep(.swiper) {
+  overflow: visible;
+  padding: 1.5rem 0;
+}
+
+.discover-carousel :deep(.swiper-slide) {
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  opacity: 0.55;
+  filter: saturate(0.6) brightness(0.9);
+}
+
+.discover-carousel :deep(.swiper-slide-active) {
+  opacity: 1;
+  filter: none;
+}
+
+.dcard {
+  border-radius: 24px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.5s ease;
+}
+
+.discover-carousel :deep(.swiper-slide-active) .dcard {
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.dcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 6s ease;
+}
+
+.discover-carousel :deep(.swiper-slide-active) .dcard img {
+  transform: scale(1.06);
+}
+
+.dcard-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 3.5rem 1.5rem 1.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.45s ease;
+}
+
+.discover-carousel :deep(.swiper-slide-active) .dcard-info {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dcard-info h3 {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.dcard-info p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 0.2rem;
+}
+
+/* Navigation Arrows */
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #334155;
+  transition: all 0.3s ease;
+}
+
+.carousel-nav:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.35);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.nav-prev {
+  right: 0;
+}
+
+.nav-next {
+  left: 0;
+}
+
+/* ---- Discover Responsive ---- */
+@media (max-width: 768px) {
+  .discover {
+    padding: 4rem 0 3rem;
+  }
+
+  .discover-title {
+    font-size: 2rem;
+  }
+
+  .discover-carousel {
+    margin-top: 2rem;
+  }
+
+  .dcard {
+    border-radius: 18px;
+  }
+
+  .carousel-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 0.85rem;
+  }
+
+  .dtab {
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
   }
 }
 </style>
