@@ -285,6 +285,57 @@
         </div>
       </div>
     </section>
+
+    <!-- Features: Sticky Scroll Section -->
+    <section class="features" ref="featRef" :style="{ height: featuresData.length * 100 + 'vh' }">
+      <div class="features-sticky">
+        <!-- Full-width background image -->
+        <div class="features-bg">
+          <Transition name="feat-fade">
+            <div class="feat-slide" :key="activeFeature">
+              <img :src="featuresData[activeFeature].img" :alt="featuresData[activeFeature].title" />
+            </div>
+          </Transition>
+          <div class="features-bg-overlay" />
+        </div>
+
+        <!-- Active feature info: centered on image -->
+        <div class="feat-active-display">
+          <Transition name="feat-info" mode="out-in">
+            <div class="feat-active-inner" :key="activeFeature">
+              <div class="feat-active-icon">
+                <i :class="'pi ' + featuresData[activeFeature].icon" />
+              </div>
+              <h3 class="feat-active-title">{{ featuresData[activeFeature].title }}</h3>
+              <p class="feat-active-desc">{{ featuresData[activeFeature].desc }}</p>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- Steps card -->
+        <div class="features-card">
+          <span class="features-tag">
+            <i class="pi pi-sparkles" />
+            مميزاتنا
+          </span>
+          <h2 class="features-title">هي وجهتك <span>المثالية</span></h2>
+          <p class="features-desc">كل ما تحتاجه لعطلة لا تُنسى متوفر في مكان واحد</p>
+          <div class="features-list">
+            <button
+              v-for="(feat, i) in featuresData"
+              :key="feat.id"
+              :class="['feat-item', { passed: i < activeFeature, current: i === activeFeature }]"
+              @click="goToFeature(i)"
+            >
+              <span class="feat-indicator">
+                <i v-if="i <= activeFeature" class="pi pi-check" />
+              </span>
+              <span class="feat-item-title">{{ feat.title }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -390,6 +441,37 @@ const aboutRef = ref(null)
 const aboutVisible = ref(false)
 let aboutObserver = null
 
+// ---- Features Section: sticky scroll ----
+const featRef = ref(null)
+const activeFeature = ref(0)
+
+const featuresData = [
+  { id: 1, title: 'شاطئ خاص', desc: 'شاطئ رملي ناعم بمياه كريستالية صافية مع خدمات شاطئية متكاملة', icon: 'pi-sun', img: 'https://picsum.photos/seed/pharma-feat-beach/1200/900' },
+  { id: 2, title: 'مطاعم متنوعة', desc: 'مطاعم عالمية تقدم أشهى المأكولات البحرية والعالمية', icon: 'pi-star', img: 'https://picsum.photos/seed/pharma-feat-dining/1200/900' },
+  { id: 3, title: 'موقف سيارات', desc: 'موقف سيارات آمن ومجهز بالكامل لجميع الزوار', icon: 'pi-car', img: 'https://picsum.photos/seed/pharma-feat-parking/1200/900' },
+  { id: 4, title: 'واي فاي مجاني', desc: 'إنترنت فائق السرعة متاح في جميع أنحاء القرية', icon: 'pi-wifi', img: 'https://picsum.photos/seed/pharma-feat-wifi/1200/900' },
+  { id: 5, title: 'أمن 24/7', desc: 'فريق أمن محترف يعمل على مدار الساعة لراحتكم وأمانكم', icon: 'pi-shield', img: 'https://picsum.photos/seed/pharma-feat-security/1200/900' },
+  { id: 6, title: 'مناطق خضراء', desc: 'حدائق ومساحات خضراء واسعة للاسترخاء والتنزه', icon: 'pi-heart', img: 'https://picsum.photos/seed/pharma-feat-green/1200/900' },
+]
+
+function onFeatScroll() {
+  if (!featRef.value) return
+  const rect = featRef.value.getBoundingClientRect()
+  if (rect.bottom < 0 || rect.top > window.innerHeight) return
+  const scrolled = -rect.top
+  const scrollable = featRef.value.offsetHeight - window.innerHeight
+  if (scrollable <= 0) return
+  const progress = Math.max(0, Math.min(1, scrolled / scrollable))
+  activeFeature.value = Math.min(featuresData.length - 1, Math.floor(progress * featuresData.length))
+}
+
+function goToFeature(idx) {
+  if (!featRef.value) return
+  const top = featRef.value.offsetTop
+  const scrollable = featRef.value.offsetHeight - window.innerHeight
+  window.scrollTo({ top: top + ((idx + 0.3) / featuresData.length) * scrollable, behavior: 'smooth' })
+}
+
 onMounted(() => {
   startShowcase()
   aboutObserver = new IntersectionObserver(
@@ -397,8 +479,14 @@ onMounted(() => {
     { threshold: 0.15 }
   )
   if (aboutRef.value) aboutObserver.observe(aboutRef.value)
+  window.addEventListener('scroll', onFeatScroll, { passive: true })
+  featuresData.forEach(f => { const img = new Image(); img.src = f.img })
 })
-onUnmounted(() => { running = false; aboutObserver?.disconnect() })
+onUnmounted(() => {
+  running = false
+  aboutObserver?.disconnect()
+  window.removeEventListener('scroll', onFeatScroll)
+})
 
 // ---- Discover Section ----
 const swiperModules = [Navigation, Autoplay, EffectCoverflow]
@@ -1821,6 +1909,336 @@ function goToSlide(idx) {
 
   .stat-num {
     font-size: 1.15rem;
+  }
+}
+
+/* ========================================
+   FEATURES SECTION (Sticky Scroll)
+   ======================================== */
+.features {
+  position: relative;
+}
+
+.features-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- Full-Width Background Image ---- */
+.features-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.features-bg .feat-slide {
+  position: absolute;
+  inset: 0;
+  will-change: opacity, transform;
+}
+
+.features-bg .feat-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.features-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.3) 35%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+  z-index: 1;
+}
+
+/* ---- Active Feature Display: centered on image ---- */
+.feat-active-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  text-align: center;
+  pointer-events: none;
+}
+
+.feat-active-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.feat-active-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.feat-active-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+.feat-active-desc {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 420px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Active feature transition */
+.feat-info-enter-active {
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feat-info-leave-active {
+  transition: all 0.3s ease;
+}
+
+.feat-info-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.feat-info-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* ---- Steps Card: glass, on the right ---- */
+.features-card {
+  position: absolute;
+  top: 50%;
+  right: max(2rem, calc((100vw - 1280px) / 2 + 2rem));
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 320px;
+  max-width: calc(100% - 4rem);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  padding: 1.5rem 1.5rem 1.75rem;
+}
+
+.features-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 1rem;
+  border-radius: 50px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(var(--primary-rgb), 0.08);
+  border: 1.5px solid rgba(var(--primary-rgb), 0.18);
+  width: fit-content;
+}
+
+.features-tag i {
+  font-size: 0.65rem;
+}
+
+.features-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 0.65rem;
+  line-height: 1.35;
+}
+
+.features-title span {
+  color: var(--primary);
+}
+
+.features-desc {
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 0.3rem;
+}
+
+/* ---- Feature Steps ---- */
+.features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 1rem;
+}
+
+.feat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #b0b8c4;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  text-align: right;
+}
+
+.feat-item:hover {
+  color: #64748b;
+}
+
+.feat-item.passed {
+  color: #475569;
+}
+
+.feat-item.current {
+  color: #0f172a;
+}
+
+.feat-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 0.55rem;
+  color: transparent;
+}
+
+.feat-item.passed .feat-indicator {
+  background: var(--secondary);
+  border-color: var(--secondary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(var(--secondary-rgb), 0.3);
+}
+
+.feat-item.current .feat-indicator {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow:
+    0 0 0 3px rgba(var(--primary-rgb), 0.12),
+    0 3px 12px rgba(var(--primary-rgb), 0.3);
+  transform: scale(1.1);
+}
+
+.feat-item-title {
+  font-weight: inherit;
+  transition: all 0.3s ease;
+}
+
+.feat-item.current .feat-item-title {
+  font-weight: 700;
+}
+
+/* ---- Image Crossfade Transition ---- */
+.feat-fade-enter-active {
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feat-fade-leave-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feat-fade-enter-from {
+  opacity: 0;
+  transform: scale(1.08);
+}
+
+.feat-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* ---- Features Responsive ---- */
+@media (max-width: 1024px) {
+  .features-card {
+    width: 290px;
+    padding: 1.25rem;
+  }
+
+  .feat-active-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .features-sticky {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .features-bg-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(0, 0, 0, 0.25) 50%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
+  }
+
+  .feat-active-display {
+    top: 30%;
+  }
+
+  .feat-active-title {
+    font-size: 1.3rem;
+  }
+
+  .feat-active-desc {
+    font-size: 0.85rem;
+    max-width: 300px;
+  }
+
+  .features-card {
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+    width: calc(100% - 2rem);
+    max-width: none;
+    margin: auto 1rem 1.5rem;
+    align-self: flex-end;
+    padding: 1.25rem;
+    border-radius: 18px;
+  }
+
+  .feat-item {
+    font-size: 0.85rem;
   }
 }
 </style>
