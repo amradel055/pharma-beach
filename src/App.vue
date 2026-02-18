@@ -5,10 +5,12 @@
     </Transition>
   </RouterView>
   <ScrollToTop />
+  <AppToast />
 </template>
 
 <script setup>
 import ScrollToTop from '@/components/ui/ScrollToTop.vue'
+import AppToast from '@/components/ui/AppToast.vue'
 </script>
 
 <style>

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import MainLayout from '@/layouts/MainLayout.vue'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import NestedLayout from '@/layouts/NestedLayout.vue'
@@ -25,14 +26,14 @@ const routes = [
       {
         path: 'login',
         name: 'login',
-        component: () => import('@/views/HomeView.vue'),
-        meta: { title: 'تسجيل الدخول' },
+        component: () => import('@/views/LoginView.vue'),
+        meta: { title: 'تسجيل الدخول', guest: true },
       },
       {
         path: 'register',
         name: 'register',
-        component: () => import('@/views/HomeView.vue'),
-        meta: { title: 'إنشاء حساب' },
+        component: () => import('@/views/RegisterView.vue'),
+        meta: { title: 'إنشاء حساب', guest: true },
       },
     ],
   },
@@ -53,6 +54,20 @@ const routes = [
         name: 'chalet-details',
         component: () => import('@/views/ChaletDetailsView.vue'),
         meta: { title: 'تفاصيل الشاليه' },
+      },
+    ],
+  },
+
+  // Booking confirmation (requires auth)
+  {
+    path: '/booking-confirmation',
+    component: NestedLayout,
+    children: [
+      {
+        path: ':id',
+        name: 'booking-confirmation',
+        component: () => import('@/views/BookingConfirmationView.vue'),
+        meta: { title: 'تأكيد الحجز', requiresAuth: true },
       },
     ],
   },
@@ -90,6 +105,21 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   },
+})
+
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+
+  // Protected routes — redirect to login if not authenticated
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    auth.returnUrl = to.fullPath
+    return { name: 'login' }
+  }
+
+  // Guest-only routes — redirect to home if already authenticated
+  if (to.meta.guest && auth.isAuthenticated) {
+    return { name: 'home' }
+  }
 })
 
 export default router

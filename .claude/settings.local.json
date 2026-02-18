@@ -17,7 +17,15 @@
       "WebFetch(domain:www.overmatter.design)",
       "WebFetch(domain:www.checkfront.com)",
       "WebFetch(domain:www.airbnb.com)",
-      "WebFetch(domain:medium.com)"
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.uinkits.com)",
+      "WebFetch(domain:muz.li)",
+      "WebFetch(domain:www.andacademy.com)",
+      "WebFetch(domain:www.justinmind.com)",
+      "WebFetch(domain:www.seedprod.com)",
+      "Bash(find:*)",
+      "Bash(file:*)",
+      "WebFetch(domain:baymard.com)"
     ]
   }
 }

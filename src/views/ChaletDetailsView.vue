@@ -322,8 +322,16 @@
             </div>
           </Transition>
 
+          <!-- Date blocked error -->
+          <Transition name="fade-bd">
+            <div v-if="dateBlockedError" class="date-blocked-error">
+              <i class="pi pi-exclamation-triangle" />
+              هذه التواريخ محجوزة بالفعل
+            </div>
+          </Transition>
+
           <!-- Book button -->
-          <button class="book-btn" :disabled="nights === 0">
+          <button class="book-btn" :disabled="nights === 0" @click="handleBook">
             <i :class="nights > 0 ? 'pi pi-check' : 'pi pi-calendar'" />
             {{ nights > 0 ? 'احجز الآن' : 'اختر تواريخ الحجز' }}
           </button>
@@ -353,7 +361,7 @@
         <span class="mb-unit">/ ليلة</span>
         <span class="mb-rating"><i class="pi pi-star-fill" /> {{ chalet.rating }}</span>
       </div>
-      <button class="mb-book" @click="scrollToSidebar">
+      <button class="mb-book" @click="handleMobileBook">
         احجز الآن
       </button>
     </div>
@@ -375,16 +383,24 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Navigation } from 'swiper/modules'
 import DatePicker from 'primevue/datepicker'
 import { chalets, amenityMap } from '@/data/chalets'
+import { useAuthStore } from '@/stores/auth'
+import { useBookingsStore } from '@/stores/bookings'
+import { useToastStore } from '@/stores/toast'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
+const bookingsStore = useBookingsStore()
+const toast = useToastStore()
+const dateBlockedError = ref(false)
 
 // ── Chalet Data ──
 const chalet = computed(() => {
@@ -448,17 +464,23 @@ const sidebarDateRange = ref(null)
 const minDate = new Date()
 const sidebarRef = ref(null)
 
-// ── Booked (disabled) dates ──
+// ── Booked (disabled) dates ── (mock bookedDates + store PENDING/CONFIRMED)
 const disabledDates = computed(() => {
-  if (!chalet.value?.bookedDates) return []
+  if (!chalet.value) return []
   const dates = []
-  for (const [start, end] of chalet.value.bookedDates) {
-    const d = new Date(start)
-    while (d <= end) {
-      dates.push(new Date(d))
-      d.setDate(d.getDate() + 1)
+  // From mock data
+  if (chalet.value.bookedDates) {
+    for (const [start, end] of chalet.value.bookedDates) {
+      const d = new Date(start)
+      while (d <= end) {
+        dates.push(new Date(d))
+        d.setDate(d.getDate() + 1)
+      }
     }
   }
+  // From store (PENDING + CONFIRMED bookings)
+  const storeDates = bookingsStore.getBlockedDatesForChalet(chalet.value.id)
+  dates.push(...storeDates)
   return dates
 })
 
@@ -485,6 +507,56 @@ const nights = computed(() => {
 
 const subtotal = computed(() => (chalet.value?.price || 0) * nights.value)
 const total = computed(() => subtotal.value + (chalet.value?.deposit || 0))
+
+// ── Booking flow ──
+function handleBook() {
+  if (nights.value === 0 || !chalet.value) return
+  dateBlockedError.value = false
+
+  // Check auth
+  if (!auth.isAuthenticated) {
+    const checkIn = sidebarDateRange.value[0].toISOString().split('T')[0]
+    const checkOut = sidebarDateRange.value[1].toISOString().split('T')[0]
+    auth.returnUrl = `/booking/${chalet.value.id}?checkIn=${checkIn}&checkOut=${checkOut}`
+    router.push('/login')
+    return
+  }
+
+  // Check date conflicts in store
+  const checkIn = sidebarDateRange.value[0].toISOString()
+  const checkOut = sidebarDateRange.value[1].toISOString()
+  if (bookingsStore.isDateBlocked(chalet.value.id, checkIn, checkOut)) {
+    dateBlockedError.value = true
+    setTimeout(() => { dateBlockedError.value = false }, 4000)
+    return
+  }
+
+  // Create booking
+  const booking = bookingsStore.createBooking({
+    chaletId: chalet.value.id,
+    userId: auth.user.id,
+    checkIn,
+    checkOut,
+    nights: nights.value,
+    subtotal: subtotal.value,
+    deposit: chalet.value.deposit,
+    total: total.value,
+    chaletName: chalet.value.name,
+    chaletNumber: chalet.value.chaletNumber,
+    chaletImage: chalet.value.image,
+  })
+
+  toast.success('تم إنشاء الحجز بنجاح')
+  router.push(`/booking-confirmation/${booking.id}`)
+}
+
+function handleMobileBook() {
+  if (nights.value > 0) {
+    handleBook()
+  } else {
+    scrollToSidebar()
+  }
+}
 
 // ── Mobile ──
 function scrollToSidebar() {
@@ -1507,6 +1579,25 @@ watch(() => route.params.id, () => {
   height: 1px;
   background: #e5e7eb;
   margin: 0.2rem 0;
+}
+
+/* ── Date blocked error ── */
+.date-blocked-error {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.55rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.date-blocked-error i {
+  font-size: 0.78rem;
 }
 
 /* ── Book Button ── */
