@@ -10,7 +10,14 @@
       "WebSearch",
       "WebFetch(domain:designmodo.com)",
       "WebFetch(domain:www.eleken.co)",
-      "WebFetch(domain:dribbble.com)"
+      "WebFetch(domain:dribbble.com)",
+      "Bash(wc:*)",
+      "WebFetch(domain:mediaboom.com)",
+      "WebFetch(domain:watanuxdesign.medium.com)",
+      "WebFetch(domain:www.overmatter.design)",
+      "WebFetch(domain:www.checkfront.com)",
+      "WebFetch(domain:www.airbnb.com)",
+      "WebFetch(domain:medium.com)"
     ]
   }
 }

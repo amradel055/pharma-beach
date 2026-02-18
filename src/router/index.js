@@ -48,6 +48,12 @@ const routes = [
         component: () => import('@/views/BookingView.vue'),
         meta: { title: 'البحث عن شاليه' },
       },
+      {
+        path: ':id',
+        name: 'chalet-details',
+        component: () => import('@/views/ChaletDetailsView.vue'),
+        meta: { title: 'تفاصيل الشاليه' },
+      },
     ],
   },
 

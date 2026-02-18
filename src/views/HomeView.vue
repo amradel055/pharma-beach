@@ -1165,7 +1165,6 @@ function goToSlide(idx) {
   flex-direction: column;
   gap: 1.5rem;
   padding: 3rem;
-  padding-right: max(3rem, calc((100vw - 1280px) / 2 + 2rem));
 }
 
 .hero-badge {
@@ -1192,6 +1191,7 @@ function goToSlide(idx) {
   line-height: 1.1;
   perspective: 600px;
   direction: ltr;
+  text-align: right;
 }
 
 .title-word {

@@ -114,7 +114,7 @@
 
           <!-- Results -->
           <template v-else-if="msg.type === 'results'">
-            <div class="results-container">
+            <div class="results-container" ref="resultsRef">
               <div class="results-header">
                 <span class="results-count" v-if="filteredChalets.length">
                   <i class="pi pi-check-circle" />
@@ -126,9 +126,10 @@
                 </button>
               </div>
               <div v-if="filteredChalets.length" class="results-grid">
-                <div
+                <RouterLink
                   v-for="chalet in filteredChalets"
                   :key="chalet.id"
+                  :to="getChaletLink(chalet.id)"
                   class="result-card"
                 >
                   <div class="result-img">
@@ -149,7 +150,7 @@
                       <span class="detail" v-for="v in chalet.views" :key="v"><i class="pi pi-eye" /> {{ v }}</span>
                     </div>
                   </div>
-                </div>
+                </RouterLink>
               </div>
               <div v-else class="no-results">
                 <div class="no-results-icon">
@@ -172,10 +173,13 @@
 
 <script setup>
 import { ref, reactive, nextTick, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import DatePicker from 'primevue/datepicker'
+import { chalets as mockChalets } from '@/data/chalets'
 
 // ── Chat State ──
 const chatContainer = ref(null)
+const resultsRef = ref(null)
 const chatMessages = ref([])
 const pendingSelections = ref([])
 const dateRange = ref(null)
@@ -190,28 +194,7 @@ const selections = reactive({
   date: null,
 })
 
-// ── Mock Data ──
-const chaletImages = [
-  'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=600&q=80',
-  'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=600&q=80',
-  'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=80',
-  'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80',
-  'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&q=80',
-  'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=600&q=80',
-  'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&q=80',
-  'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=600&q=80',
-]
-
-const mockChalets = [
-  { id: 1, name: 'شاليه النخيل', floor: 'الأرضي', rooms: 2, finishing: 'فاخر', views: ['بحر', 'حمام سباحة'], price: 2500, image: chaletImages[0] },
-  { id: 2, name: 'شاليه اللؤلؤة', floor: 'الأول', rooms: 3, finishing: 'فاخر', views: ['بحر'], price: 3200, image: chaletImages[1] },
-  { id: 3, name: 'شاليه الموج', floor: 'الأرضي', rooms: 1, finishing: 'متوسط', views: ['بحر', 'حديقة'], price: 1800, image: chaletImages[2] },
-  { id: 4, name: 'شاليه الشروق', floor: 'الثاني', rooms: 2, finishing: 'متوسط', views: ['حديقة'], price: 1500, image: chaletImages[3] },
-  { id: 5, name: 'شاليه الأمواج', floor: 'الثالث', rooms: 4, finishing: 'فاخر', views: ['بحر', 'حمام سباحة'], price: 4000, image: chaletImages[4] },
-  { id: 6, name: 'شاليه الريف', floor: 'الأول', rooms: 2, finishing: 'اقتصادي', views: ['شارع'], price: 1200, image: chaletImages[5] },
-  { id: 7, name: 'شاليه البحيرة', floor: 'الأرضي', rooms: 3, finishing: 'متوسط', views: ['حمام سباحة', 'حديقة'], price: 2200, image: chaletImages[6] },
-  { id: 8, name: 'شاليه الياسمين', floor: 'الثاني', rooms: 1, finishing: 'اقتصادي', views: ['شارع', 'حديقة'], price: 900, image: chaletImages[7] },
-]
+// ── Mock data imported from @/data/chalets ──
 
 // ── Wizard Steps ──
 const steps = [
@@ -281,12 +264,10 @@ function removeLastMessage() {
 
 async function scrollToBottom() {
   await nextTick()
-  if (chatContainer.value) {
-    chatContainer.value.scrollTo({
-      top: chatContainer.value.scrollHeight,
-      behavior: 'smooth',
-    })
-  }
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: 'smooth',
+  })
 }
 
 function sleep(ms) {
@@ -302,6 +283,17 @@ async function showTypingThenMessage(text) {
 
 // ── Filter Logic ──
 const filteredChalets = ref([])
+
+function getChaletLink(id) {
+  const link = { name: 'chalet-details', params: { id } }
+  if (selections.date && selections.date[0] && selections.date[1]) {
+    link.query = {
+      checkIn: selections.date[0].toISOString().split('T')[0],
+      checkOut: selections.date[1].toISOString().split('T')[0],
+    }
+  }
+  return link
+}
 
 function computeFilteredChalets() {
   let results = [...mockChalets]
@@ -471,6 +463,11 @@ async function runWizardFrom(startIndex, skipFirstTyping = false) {
   await sleep(400)
   computeFilteredChalets()
   addMessage({ type: 'results' })
+  await nextTick()
+  await sleep(100)
+  if (resultsRef.value) {
+    resultsRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   wizardAbort = null
 }
 
@@ -519,13 +516,14 @@ onMounted(() => {
   width: 100%;
   margin: 0 auto;
   padding: 7rem 2rem 2rem;
-  overflow-y: auto;
 }
 
 .chat-messages {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-height: 100%;
+  justify-content: flex-end;
 }
 
 /* ── Chat Row ── */
@@ -787,30 +785,32 @@ onMounted(() => {
 /* ── Date Picker ── */
 .datepicker-wrap {
   margin-bottom: 0.75rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-radius: 20px;
-  padding: 1.25rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.15rem;
+  border: 1px solid #e8e8e8;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .date-selected-hint {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.85rem;
-  margin-bottom: 0.75rem;
-  background: rgba(var(--primary-rgb), 0.08);
-  border-radius: 12px;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  margin-bottom: 0.85rem;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
   font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--primary-dark);
+  font-weight: 700;
+  color: #166534;
 }
 
 .date-selected-hint i {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  color: #16a34a;
 }
 
 .datepicker-wrap :deep(.p-datepicker) {
@@ -821,30 +821,31 @@ onMounted(() => {
 }
 
 .datepicker-wrap :deep(.p-datepicker-header) {
-  padding: 0.5rem 0 0.75rem;
-  border-bottom: 1px solid #f1f5f9;
-  margin-bottom: 0.5rem;
+  padding: 0.25rem 0 0.6rem;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 0.4rem;
 }
 
 .datepicker-wrap :deep(.p-datepicker-title) {
-  font-weight: 700;
-  color: #0f172a;
-  gap: 0.5rem;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #111;
+  gap: 0.4rem;
 }
 
 .datepicker-wrap :deep(.p-datepicker-prev-button),
 .datepicker-wrap :deep(.p-datepicker-next-button) {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  color: #475569;
-  transition: all 0.2s ease;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #444;
+  transition: all 0.15s ease;
 }
 
 .datepicker-wrap :deep(.p-datepicker-prev-button:hover),
 .datepicker-wrap :deep(.p-datepicker-next-button:hover) {
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary);
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .datepicker-wrap :deep(.p-datepicker-day-cell) {
@@ -854,47 +855,52 @@ onMounted(() => {
 .datepicker-wrap :deep(.p-datepicker-day) {
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 12px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 0.85rem;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.datepicker-wrap :deep(.p-datepicker-day:not(.p-disabled):hover) {
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary);
+.datepicker-wrap :deep(.p-datepicker-day:not(.p-disabled):not(.p-datepicker-day-selected):hover) {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .datepicker-wrap :deep(.p-datepicker-day.p-datepicker-day-selected) {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: #16a34a;
   color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.3);
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3);
+  font-weight: 700;
 }
 
 .datepicker-wrap :deep(.p-datepicker-day.p-datepicker-day-selected-range) {
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary);
+  background: #dcfce7;
+  color: #166534;
   border-radius: 0;
 }
 
 .datepicker-wrap :deep(.p-datepicker-weekday-cell) {
-  padding: 0.5rem 0;
+  padding: 0.35rem 0;
 }
 
 .datepicker-wrap :deep(.p-datepicker-weekday) {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #aaa;
+  text-transform: uppercase;
 }
 
 .datepicker-wrap :deep(.p-datepicker-day.p-disabled) {
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
 /* ── Results ── */
 .results-container {
   width: 100%;
+  min-height: 100vh;
+  padding-top: 8rem;
+  margin-top: -8rem;
 }
 
 .results-header {
@@ -943,6 +949,12 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+}
+
+a.result-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .result-card {

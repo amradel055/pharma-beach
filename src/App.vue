@@ -4,7 +4,12 @@
       <component :is="Component" />
     </Transition>
   </RouterView>
+  <ScrollToTop />
 </template>
+
+<script setup>
+import ScrollToTop from '@/components/ui/ScrollToTop.vue'
+</script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;0,800;0,900;1,400;1,700&display=swap');
