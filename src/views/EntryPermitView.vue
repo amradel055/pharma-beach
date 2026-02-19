@@ -1,82 +1,47 @@
 <template>
-  <div class="confirmation-page" v-if="booking">
+  <div class="permit-page" v-if="booking">
     <!-- Background -->
     <div class="page-bg" />
     <div class="page-overlay" />
 
     <!-- Glass container -->
     <div class="glass-container">
-      <!-- Success icon -->
-      <div class="success-header anim-item" style="--i: 0">
-        <div class="success-icon">
-          <svg class="checkmark" viewBox="0 0 52 52">
-            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
-            <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
-          </svg>
+      <!-- Header -->
+      <div class="permit-header anim-item" style="--i: 0">
+        <div class="permit-icon">
+          <i class="pi pi-verified" />
         </div>
-        <h1>شكراً لحضرتك على الحجز</h1>
-        <p class="booking-id-label">رقم الحجز: <strong>{{ booking.id }}</strong></p>
+        <h1>تصريح الدخول</h1>
+        <span class="booking-id-badge">{{ booking.id }}</span>
       </div>
 
-      <!-- Booking summary -->
-      <div class="glass-card anim-item" style="--i: 1">
-        <div class="summary-top">
-          <img :src="booking.chaletImage" :alt="booking.chaletName" class="summary-img" />
-          <div class="summary-info">
-            <h3>{{ booking.chaletName }}</h3>
-            <span class="chalet-num"><i class="pi pi-hashtag" /> شاليه {{ booking.chaletNumber }}</span>
-          </div>
+      <!-- QR Code Card -->
+      <div class="glass-card qr-card anim-item" style="--i: 1" v-if="booking.status === 'PENDING'">
+        <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" class="qr-image" />
+        <div v-else class="qr-placeholder">
+          <i class="pi pi-spin pi-spinner" />
         </div>
-
-        <div class="glass-divider" />
-
-        <div class="summary-rows">
-          <div class="summary-row">
-            <span class="row-label"><i class="pi pi-calendar" /> تسجيل الوصول</span>
-            <span class="row-value">{{ formatDate(booking.checkIn) }}</span>
-          </div>
-          <div class="summary-row">
-            <span class="row-label"><i class="pi pi-calendar" /> تسجيل المغادرة</span>
-            <span class="row-value">{{ formatDate(booking.checkOut) }}</span>
-          </div>
-          <div class="summary-row">
-            <span class="row-label"><i class="pi pi-moon" /> عدد الليالي</span>
-            <span class="row-value">{{ booking.nights }} {{ booking.nights === 1 ? 'ليلة' : 'ليالي' }}</span>
-          </div>
-        </div>
-
-        <div class="glass-divider" />
-
-        <div class="summary-rows">
-          <div class="summary-row">
-            <span class="row-label">سعر الليلة × {{ booking.nights }}</span>
-            <span class="row-value">{{ booking.subtotal?.toLocaleString('ar-EG') }} ج.م</span>
-          </div>
-          <div class="summary-row">
-            <span class="row-label">
-              تأمين
-              <span class="refund-badge">مسترد</span>
-            </span>
-            <span class="row-value">{{ booking.deposit?.toLocaleString('ar-EG') }} ج.م</span>
-          </div>
-          <div class="glass-divider thin" />
-          <div class="summary-row total">
-            <span class="row-label">الإجمالي</span>
-            <span class="row-value">{{ booking.total?.toLocaleString('ar-EG') }} ج.م</span>
-          </div>
-        </div>
+        <p class="qr-caption">امسح الكود عند بوابة الدخول</p>
       </div>
 
-      <!-- Payment deadline -->
-      <div class="glass-card deadline anim-item" style="--i: 2" v-if="booking.status === 'PENDING'">
-        <div class="deadline-row">
-          <div class="deadline-icon">
-            <i class="pi pi-clock" />
+      <!-- Preliminary Booking Notice -->
+      <div class="glass-card notice anim-item" style="--i: 2" v-if="booking.status === 'PENDING'">
+        <div class="notice-row">
+          <div class="notice-icon">
+            <i class="pi pi-info-circle" />
           </div>
-          <p class="deadline-text">
-            في حالة عدم الدفع خلال <strong>{{ deadlineHours }} ساعة</strong> يُعتبر الحجز لاغياً
+          <p class="notice-text">
+            تم الحجز بشكل مبدئي لمدة <strong>{{ deadlineHours }} ساعة</strong>، لاستكمال الحجز برجاء التواصل على الرقم <strong dir="ltr">{{ formattedPhone }}</strong>
           </p>
         </div>
+      </div>
+
+      <!-- Validity / Countdown (PENDING) -->
+      <div class="glass-card deadline anim-item" style="--i: 3" v-if="booking.status === 'PENDING'">
+        <p class="expiry-label">
+          <i class="pi pi-clock" />
+          صالح حتى: {{ formatDateTime(booking.expiresAt) }}
+        </p>
         <div class="countdown">
           <div class="countdown-block">
             <span class="countdown-num">{{ timeLeft.hours }}</span>
@@ -95,14 +60,14 @@
         </div>
       </div>
 
-      <!-- Expired notice -->
-      <div class="glass-card expired anim-item" style="--i: 2" v-else-if="booking.status === 'EXPIRED'">
+      <!-- Invalid permit (EXPIRED / CANCELLED) -->
+      <div class="glass-card expired anim-item" style="--i: 1" v-if="booking.status === 'EXPIRED' || booking.status === 'CANCELLED'">
         <i class="pi pi-exclamation-triangle" />
-        <span>انتهت صلاحية هذا الحجز</span>
+        <span>التصريح غير صالح</span>
       </div>
 
-      <!-- Contact section -->
-      <div class="glass-card contact anim-item" style="--i: 3">
+      <!-- Contact Section -->
+      <div class="glass-card contact anim-item" style="--i: 4">
         <div class="contact-header">
           <i class="pi pi-phone" />
           <h3>تواصل معنا لتأكيد الدفع</h3>
@@ -114,22 +79,21 @@
         </a>
       </div>
 
-      <!-- Entry permit link -->
-      <RouterLink :to="`/entry-permit/${booking.id}`" class="permit-btn anim-item" style="--i: 3.5" v-if="booking.status === 'PENDING'">
-        <i class="pi pi-qrcode" />
-        عرض تصريح الدخول
-      </RouterLink>
-
-      <!-- Email notification -->
-      <div class="glass-card notification anim-item" style="--i: 4">
-        <i class="pi pi-bell" />
-        <span>تم إرسال تأكيد الحجز على إيميلك</span>
+      <!-- Entry Instructions -->
+      <div class="glass-card instructions anim-item" style="--i: 5">
+        <div class="instructions-header">
+          <i class="pi pi-list" />
+          <h3>تعليمات الدخول</h3>
+        </div>
+        <ul class="instructions-list">
+          <li v-for="(line, idx) in instructionLines" :key="idx">{{ line }}</li>
+        </ul>
       </div>
 
-      <!-- Home button -->
-      <RouterLink to="/" class="home-btn anim-item" style="--i: 5">
-        <i class="pi pi-home" />
-        العودة للرئيسية
+      <!-- Back Button -->
+      <RouterLink :to="`/booking-confirmation/${booking.id}`" class="back-btn anim-item" style="--i: 6">
+        <i class="pi pi-arrow-right" />
+        العودة لتفاصيل الحجز
       </RouterLink>
     </div>
   </div>
@@ -152,22 +116,61 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useBookingsStore } from '@/stores/bookings'
 import { useSettingsStore } from '@/stores/settings'
+import { useAuthStore } from '@/stores/auth'
+import QRCode from 'qrcode'
 
 const route = useRoute()
+const router = useRouter()
 const bookingsStore = useBookingsStore()
 const settings = useSettingsStore()
+const auth = useAuthStore()
 
 const booking = computed(() => bookingsStore.getBookingById(route.params.id))
 const deadlineHours = computed(() => settings.pendingDurationMinutes / 60)
+
+const qrDataUrl = ref('')
 
 // Countdown timer
 const now = ref(new Date())
 let timer = null
 
-onMounted(() => {
+onMounted(async () => {
+  // Security checks
+  if (!auth.isAuthenticated) {
+    router.replace({ name: 'login' })
+    return
+  }
+
+  const b = bookingsStore.getBookingById(route.params.id)
+  if (!b) return
+
+  if (b.userId !== auth.user.id) {
+    router.replace({ name: 'home' })
+    return
+  }
+
+  // Expire stale bookings
+  bookingsStore.expireStaleBookings()
+
+  // Generate QR code
+  try {
+    const qrContent = JSON.stringify({
+      bookingId: b.id,
+      chaletNumber: b.chaletNumber,
+      chaletName: b.chaletName,
+      checkIn: b.checkIn,
+      checkOut: b.checkOut,
+      expiresAt: b.expiresAt,
+    })
+    qrDataUrl.value = await QRCode.toDataURL(qrContent, { width: 280, margin: 2 })
+  } catch {
+    /* QR generation failed silently */
+  }
+
+  // Start countdown
   timer = setInterval(() => {
     now.value = new Date()
     bookingsStore.expireStaleBookings()
@@ -194,7 +197,7 @@ const timeLeft = computed(() => {
   }
 })
 
-function formatDate(dateStr) {
+function formatDateTime(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('ar-EG', {
@@ -202,6 +205,8 @@ function formatDate(dateStr) {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -214,10 +219,17 @@ const whatsappUrl = computed(() => {
   if (!booking.value) return '#'
   let msg = settings.contactMessage
     .replace('{chaletNumber}', booking.value.chaletNumber)
-    .replace('{checkIn}', formatDate(booking.value.checkIn))
-    .replace('{checkOut}', formatDate(booking.value.checkOut))
+    .replace('{checkIn}', formatDateTime(booking.value.checkIn))
+    .replace('{checkOut}', formatDateTime(booking.value.checkOut))
     .replace('{bookingId}', booking.value.id)
   return `https://wa.me/${settings.contactPhone}?text=${encodeURIComponent(msg)}`
+})
+
+const instructionLines = computed(() => {
+  return settings.entryInstructions
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
 })
 </script>
 
@@ -225,7 +237,7 @@ const whatsappUrl = computed(() => {
 /* ═══════════════════════════════════
    PAGE & BACKGROUND
    ═══════════════════════════════════ */
-.confirmation-page {
+.permit-page {
   position: relative;
   min-height: 100vh;
 }
@@ -277,70 +289,54 @@ const whatsappUrl = computed(() => {
 }
 
 /* ═══════════════════════════════════
-   SUCCESS HEADER
+   PERMIT HEADER
    ═══════════════════════════════════ */
-.success-header {
+.permit-header {
   text-align: center;
   margin-bottom: 1.75rem;
 }
 
-.success-icon {
+.permit-icon {
   width: 80px;
   height: 80px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto 1.25rem;
+  animation: iconPulse 2s ease-in-out infinite;
+  border: 2px solid rgba(96, 165, 250, 0.25);
 }
 
-.checkmark {
-  width: 80px;
-  height: 80px;
-  display: block;
-  stroke-width: 2;
-  stroke: #4ade80;
-  stroke-miterlimit: 10;
-  filter: drop-shadow(0 6px 24px rgba(74, 222, 128, 0.4));
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
 }
 
-.checkmark-circle {
-  stroke-dasharray: 166;
-  stroke-dashoffset: 166;
-  stroke-width: 2;
-  stroke: #4ade80;
-  fill: rgba(74, 222, 128, 0.12);
-  animation: circleStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.4s forwards;
+.permit-icon i {
+  font-size: 2rem;
+  color: #60a5fa;
+  filter: drop-shadow(0 0 12px rgba(96, 165, 250, 0.4));
 }
 
-.checkmark-check {
-  stroke-dasharray: 48;
-  stroke-dashoffset: 48;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  animation: checkStroke 0.35s cubic-bezier(0.65, 0, 0.45, 1) 0.9s forwards;
-}
-
-@keyframes circleStroke { to { stroke-dashoffset: 0; } }
-@keyframes checkStroke { to { stroke-dashoffset: 0; } }
-
-.success-header h1 {
+.permit-header h1 {
   font-size: 1.45rem;
   font-weight: 800;
   color: #fff;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
 }
 
-.booking-id-label {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.booking-id-label strong {
+.booking-id-badge {
+  display: inline-block;
   color: #fbbf24;
   font-weight: 700;
   background: rgba(251, 191, 36, 0.12);
-  padding: 0.15rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.78rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  border: 1px solid rgba(251, 191, 36, 0.2);
 }
 
 /* ═══════════════════════════════════
@@ -357,125 +353,61 @@ const whatsappUrl = computed(() => {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.glass-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.12);
-  margin: 1rem 0;
-}
-
-.glass-divider.thin {
-  margin: 0.5rem 0;
-}
-
 /* ═══════════════════════════════════
-   SUMMARY
+   QR CODE CARD
    ═══════════════════════════════════ */
-.summary-top {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+.glass-card.qr-card {
+  text-align: center;
+  padding: 1.75rem 1.35rem;
 }
 
-.summary-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 14px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+.qr-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 16px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  margin-bottom: 1rem;
 }
 
-.summary-info h3 {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 0.25rem;
-}
-
-.chalet-num {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+.qr-placeholder {
+  width: 200px;
+  height: 200px;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
 }
 
-.chalet-num i { font-size: 0.7rem; }
-
-.summary-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.row-label {
-  font-size: 0.84rem;
-  color: rgba(255, 255, 255, 0.6);
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-weight: 500;
-}
-
-.row-label i {
-  font-size: 0.78rem;
+.qr-placeholder i {
+  font-size: 2rem;
   color: rgba(255, 255, 255, 0.4);
 }
 
-.row-value {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.summary-row.total .row-label {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.summary-row.total .row-value {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #fbbf24;
-  text-shadow: 0 0 12px rgba(251, 191, 36, 0.3);
-}
-
-.refund-badge {
-  display: inline-block;
-  padding: 0.1rem 0.4rem;
-  border-radius: 6px;
-  background: rgba(74, 222, 128, 0.15);
-  color: #4ade80;
-  font-size: 0.6rem;
-  font-weight: 700;
-  margin-right: 0.25rem;
-  border: 1px solid rgba(74, 222, 128, 0.2);
+.qr-caption {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
 }
 
 /* ═══════════════════════════════════
-   DEADLINE
+   PRELIMINARY NOTICE
    ═══════════════════════════════════ */
-.glass-card.deadline {
+.glass-card.notice {
   background: rgba(251, 191, 36, 0.1);
   border-color: rgba(251, 191, 36, 0.2);
 }
 
-.deadline-row {
+.notice-row {
   display: flex;
   gap: 0.85rem;
   align-items: flex-start;
-  margin-bottom: 1rem;
 }
 
-.deadline-icon {
+.notice-icon {
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -484,30 +416,48 @@ const whatsappUrl = computed(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  animation: iconPulse 2s ease-in-out infinite;
 }
 
-@keyframes iconPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-
-.deadline-icon i {
+.notice-icon i {
   font-size: 1.2rem;
   color: #fbbf24;
 }
 
-.deadline-text {
+.notice-text {
   font-size: 0.84rem;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.7;
 }
 
-.deadline-text strong {
+.notice-text strong {
   color: #fbbf24;
 }
 
-/* ── Countdown ── */
+/* ═══════════════════════════════════
+   VALIDITY / COUNTDOWN
+   ═══════════════════════════════════ */
+.glass-card.deadline {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.2);
+  text-align: center;
+}
+
+.expiry-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.expiry-label i {
+  font-size: 1rem;
+  color: #fbbf24;
+}
+
 .countdown {
   display: flex;
   align-items: center;
@@ -636,73 +586,50 @@ const whatsappUrl = computed(() => {
 }
 
 /* ═══════════════════════════════════
-   PERMIT BUTTON
+   ENTRY INSTRUCTIONS
    ═══════════════════════════════════ */
-.permit-btn {
+.glass-card.instructions {
+  padding-bottom: 1rem;
+}
+
+.instructions-header {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  width: 100%;
-  padding: 0.85rem;
-  border-radius: 14px;
-  background: rgba(96, 165, 250, 0.15);
-  border: 1px solid rgba(96, 165, 250, 0.25);
-  color: #60a5fa;
-  font-size: 0.92rem;
-  font-weight: 700;
-  text-decoration: none;
-  font-family: inherit;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.1);
-  margin-bottom: 1.15rem;
+  margin-bottom: 1rem;
 }
 
-.permit-btn:hover {
-  background: rgba(96, 165, 250, 0.22);
-  box-shadow: 0 6px 28px rgba(96, 165, 250, 0.2);
-  transform: translateY(-2px);
-}
-
-.permit-btn i {
-  font-size: 1.1rem;
-}
-
-/* ═══════════════════════════════════
-   NOTIFICATION
-   ═══════════════════════════════════ */
-.glass-card.notification {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(96, 165, 250, 0.1);
-  border-color: rgba(96, 165, 250, 0.18);
-  padding: 0.9rem;
-}
-
-.glass-card.notification i {
+.instructions-header i {
   font-size: 1rem;
   color: #60a5fa;
-  animation: bellRing 3s ease-in-out infinite;
 }
 
-@keyframes bellRing {
-  0%, 100% { transform: rotate(0); }
-  5% { transform: rotate(12deg); }
-  10% { transform: rotate(-10deg); }
-  15% { transform: rotate(8deg); }
-  20% { transform: rotate(-6deg); }
-  25% { transform: rotate(0); }
+.instructions-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.instructions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.instructions-list li {
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  padding-right: 0.25rem;
 }
 
 /* ═══════════════════════════════════
-   HOME BUTTON
+   BACK BUTTON
    ═══════════════════════════════════ */
-.home-btn {
+.back-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -720,7 +647,7 @@ const whatsappUrl = computed(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.home-btn:hover {
+.back-btn:hover {
   background: #fff;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
@@ -825,24 +752,32 @@ const whatsappUrl = computed(() => {
     padding: 5rem 1rem 2rem;
   }
 
-  .success-icon,
-  .checkmark {
+  .permit-icon {
     width: 68px;
     height: 68px;
   }
 
-  .success-header h1 {
+  .permit-icon i {
+    font-size: 1.7rem;
+  }
+
+  .permit-header h1 {
     font-size: 1.25rem;
+  }
+
+  .qr-image {
+    width: 180px;
+    height: 180px;
+  }
+
+  .qr-placeholder {
+    width: 180px;
+    height: 180px;
   }
 
   .countdown-num {
     font-size: 1.25rem;
     min-width: 44px;
-  }
-
-  .summary-img {
-    width: 70px;
-    height: 70px;
   }
 }
 </style>

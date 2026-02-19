@@ -84,6 +84,20 @@ const routes = [
     ],
   },
 
+  // Entry permit (requires auth)
+  {
+    path: '/entry-permit',
+    component: NestedLayout,
+    children: [
+      {
+        path: ':id',
+        name: 'entry-permit',
+        component: () => import('@/views/EntryPermitView.vue'),
+        meta: { title: 'تصريح الدخول', requiresAuth: true },
+      },
+    ],
+  },
+
   // Nested layout — different navbar, no footer
   {
     path: '/app',
