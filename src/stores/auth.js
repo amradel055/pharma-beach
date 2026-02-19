@@ -80,6 +80,72 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('pb_user')
   }
 
+  function _getResetTokens() {
+    try {
+      return JSON.parse(localStorage.getItem('pb_reset_tokens') || '[]')
+    } catch {
+      return []
+    }
+  }
+
+  function _saveResetTokens(tokens) {
+    localStorage.setItem('pb_reset_tokens', JSON.stringify(tokens))
+  }
+
+  function requestPasswordReset(email) {
+    const normalizedEmail = email.trim().toLowerCase()
+    const users = _getUsers()
+    const found = users.find((u) => u.email === normalizedEmail)
+
+    if (found) {
+      const token = Date.now().toString(36) + Math.random().toString(36).slice(2, 10)
+      const tokens = _getResetTokens()
+      tokens.push({
+        token,
+        email: normalizedEmail,
+        expiresAt: Date.now() + 30 * 60 * 1000,
+      })
+      _saveResetTokens(tokens)
+      return { ok: true, token }
+    }
+
+    return { ok: true }
+  }
+
+  function validateResetToken(token) {
+    const tokens = _getResetTokens()
+    const entry = tokens.find((t) => t.token === token)
+
+    if (!entry || entry.expiresAt < Date.now()) {
+      return { ok: false, error: 'الرابط غير صالح أو منتهي' }
+    }
+
+    return { ok: true, email: entry.email }
+  }
+
+  function resetPassword(token, newPassword) {
+    const validation = validateResetToken(token)
+    if (!validation.ok) return validation
+
+    const users = _getUsers()
+    const userIndex = users.findIndex((u) => u.email === validation.email)
+    if (userIndex === -1) {
+      return { ok: false, error: 'المستخدم غير موجود' }
+    }
+
+    if (users[userIndex].password === newPassword) {
+      return { ok: false, error: 'كلمة المرور الجديدة يجب أن تختلف عن القديمة' }
+    }
+
+    users[userIndex].password = newPassword
+    _saveUsers(users)
+
+    const tokens = _getResetTokens().filter((t) => t.email !== validation.email)
+    _saveResetTokens(tokens)
+
+    return { ok: true }
+  }
+
   // Run init immediately
   init()
 
@@ -90,5 +156,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
+    requestPasswordReset,
+    validateResetToken,
+    resetPassword,
   }
 })

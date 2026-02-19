@@ -25,7 +25,8 @@
       "WebFetch(domain:www.seedprod.com)",
       "Bash(find:*)",
       "Bash(file:*)",
-      "WebFetch(domain:baymard.com)"
+      "WebFetch(domain:baymard.com)",
+      "Bash(npx vue-tsc:*)"
     ]
   }
 }

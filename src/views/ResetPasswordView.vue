@@ -8,8 +8,8 @@
         <RouterLink to="/" class="photo-logo anim-item" style="--i: 0">
           <img :src="logo" alt="Pharma Beach" />
         </RouterLink>
-        <h2 class="anim-item" style="--i: 1">مرحباً بك في فارما بيتش</h2>
-        <p class="anim-item" style="--i: 2">اكتشف أفضل الشاليهات واحجز إقامتك المثالية على الساحل</p>
+        <h2 class="anim-item" style="--i: 1">إعادة تعيين كلمة المرور</h2>
+        <p class="anim-item" style="--i: 2">اختر كلمة مرور جديدة وقوية لحماية حسابك</p>
       </div>
     </div>
 
@@ -21,127 +21,169 @@
           <img :src="logo" alt="Pharma Beach" />
         </RouterLink>
 
-        <h1 class="anim-item" style="--i: 0">تسجيل الدخول</h1>
-        <p class="auth-subtitle anim-item" style="--i: 1">أهلاً بعودتك! سجّل دخولك للمتابعة</p>
+        <!-- Token invalid / expired -->
+        <template v-if="tokenError">
+          <h1 class="anim-item" style="--i: 0">رابط غير صالح</h1>
 
-        <!-- Error message -->
-        <Transition name="fade-msg">
-          <div v-if="errorMsg" class="auth-error">
+          <div class="auth-error anim-item" style="--i: 1">
             <i class="pi pi-exclamation-circle" />
-            {{ errorMsg }}
+            {{ tokenError }}
           </div>
-        </Transition>
 
-        <form @submit.prevent="handleLogin" novalidate>
-          <!-- Email -->
-          <div class="field anim-item" style="--i: 2">
-            <label for="email">البريد الإلكتروني</label>
-            <div :class="['input-wrap', { error: touched.email && !isEmailValid, focus: focused === 'email' }]">
-              <i class="pi pi-envelope" />
-              <input
-                id="email"
-                v-model="form.email"
-                type="email"
-                placeholder="example@email.com"
-                autocomplete="email"
-                @focus="focused = 'email'"
-                @blur="focused = null; touched.email = true"
-              />
+          <p class="switch-link anim-item" style="--i: 2">
+            <RouterLink to="/forgot-password">
+              <i class="pi pi-refresh" />
+              طلب رابط جديد
+            </RouterLink>
+          </p>
+        </template>
+
+        <!-- Reset form -->
+        <template v-else-if="tokenValid">
+          <h1 class="anim-item" style="--i: 0">كلمة مرور جديدة</h1>
+          <p class="auth-subtitle anim-item" style="--i: 1">أدخل كلمة المرور الجديدة لحسابك</p>
+
+          <!-- Error message -->
+          <Transition name="fade-msg">
+            <div v-if="errorMsg" class="auth-error">
+              <i class="pi pi-exclamation-circle" />
+              {{ errorMsg }}
             </div>
-            <Transition name="fade-msg">
-              <span v-if="touched.email && !isEmailValid" class="field-error">أدخل بريد إلكتروني صحيح</span>
-            </Transition>
-          </div>
+          </Transition>
 
-          <!-- Password -->
-          <div class="field anim-item" style="--i: 3">
-            <label for="password">كلمة المرور</label>
-            <div :class="['input-wrap', { error: touched.password && !form.password, focus: focused === 'password' }]">
-              <i class="pi pi-lock" />
-              <input
-                id="password"
-                v-model="form.password"
-                :type="showPass ? 'text' : 'password'"
-                placeholder="••••••"
-                autocomplete="current-password"
-                @focus="focused = 'password'"
-                @blur="focused = null; touched.password = true"
-              />
-              <button type="button" class="toggle-pass" @click="showPass = !showPass" tabindex="-1">
-                <i :class="showPass ? 'pi pi-eye-slash' : 'pi pi-eye'" />
-              </button>
+          <form @submit.prevent="handleReset" novalidate>
+            <!-- New password -->
+            <div class="field anim-item" style="--i: 2">
+              <label for="password">كلمة المرور الجديدة</label>
+              <div :class="['input-wrap', { error: touched.password && !isPasswordValid, focus: focused === 'password' }]">
+                <i class="pi pi-lock" />
+                <input
+                  id="password"
+                  v-model="form.password"
+                  :type="showPass ? 'text' : 'password'"
+                  placeholder="6 أحرف على الأقل"
+                  autocomplete="new-password"
+                  @focus="focused = 'password'"
+                  @blur="focused = null; touched.password = true"
+                />
+                <button type="button" class="toggle-pass" @click="showPass = !showPass" tabindex="-1">
+                  <i :class="showPass ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+                </button>
+              </div>
+              <Transition name="fade-msg">
+                <span v-if="touched.password && !isPasswordValid" class="field-error">كلمة المرور يجب أن تكون 6 أحرف على الأقل</span>
+              </Transition>
             </div>
+
+            <!-- Confirm password -->
+            <div class="field anim-item" style="--i: 3">
+              <label for="confirm">تأكيد كلمة المرور</label>
+              <div :class="['input-wrap', { error: touched.confirm && !isConfirmValid, focus: focused === 'confirm' }]">
+                <i class="pi pi-lock" />
+                <input
+                  id="confirm"
+                  v-model="form.confirm"
+                  :type="showConfirm ? 'text' : 'password'"
+                  placeholder="أعد كتابة كلمة المرور"
+                  autocomplete="new-password"
+                  @focus="focused = 'confirm'"
+                  @blur="focused = null; touched.confirm = true"
+                />
+                <button type="button" class="toggle-pass" @click="showConfirm = !showConfirm" tabindex="-1">
+                  <i :class="showConfirm ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+                </button>
+              </div>
+              <Transition name="fade-msg">
+                <span v-if="touched.confirm && !isConfirmValid" class="field-error">كلمتا المرور غير متطابقتين</span>
+              </Transition>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="auth-btn anim-item" style="--i: 4" :disabled="!isFormValid || loading">
+              <i v-if="loading" class="pi pi-spin pi-spinner" />
+              <template v-else>
+                <i class="pi pi-check" />
+                حفظ كلمة المرور
+              </template>
+            </button>
+          </form>
+        </template>
+
+        <!-- Loading state -->
+        <template v-else>
+          <div class="loading-state">
+            <i class="pi pi-spin pi-spinner" />
           </div>
-
-          <!-- Forgot password -->
-          <RouterLink to="/forgot-password" class="forgot-link anim-item" style="--i: 4">نسيت كلمة المرور؟</RouterLink>
-
-          <!-- Submit -->
-          <button type="submit" class="auth-btn anim-item" style="--i: 5" :disabled="!isFormValid || loading">
-            <i v-if="loading" class="pi pi-spin pi-spinner" />
-            <template v-else>
-              <i class="pi pi-sign-in" />
-              تسجيل الدخول
-            </template>
-          </button>
-        </form>
-
-        <!-- Register link -->
-        <p class="switch-link anim-item" style="--i: 6">
-          ليس لديك حساب؟
-          <RouterLink to="/register">سجل الآن</RouterLink>
-        </p>
+        </template>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import logo from '@/assets/images/logo.jpeg'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const toast = useToastStore()
 
+const tokenValid = ref(false)
+const tokenError = ref('')
+const errorMsg = ref('')
+const loading = ref(false)
+const focused = ref(null)
+const showPass = ref(false)
+const showConfirm = ref(false)
+
 const form = reactive({
-  email: '',
   password: '',
+  confirm: '',
 })
 
-const touched = reactive({ email: false, password: false })
-const showPass = ref(false)
-const loading = ref(false)
-const errorMsg = ref('')
-const focused = ref(null)
+const touched = reactive({ password: false, confirm: false })
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const isEmailValid = computed(() => emailRegex.test(form.email.trim()))
-const isFormValid = computed(() => isEmailValid.value && form.password.length > 0)
+const isPasswordValid = computed(() => form.password.length >= 6)
+const isConfirmValid = computed(() => form.confirm.length > 0 && form.confirm === form.password)
+const isFormValid = computed(() => isPasswordValid.value && isConfirmValid.value)
 
-function handleLogin() {
+onMounted(() => {
+  const token = route.query.token
+  if (!token) {
+    tokenError.value = 'الرابط غير صالح أو منتهي'
+    return
+  }
+
+  const result = auth.validateResetToken(token)
+  if (result.ok) {
+    tokenValid.value = true
+  } else {
+    tokenError.value = result.error
+  }
+})
+
+function handleReset() {
   if (!isFormValid.value) return
   loading.value = true
   errorMsg.value = ''
 
   setTimeout(() => {
-    const result = auth.login(form.email, form.password)
+    const token = route.query.token
+    const result = auth.resetPassword(token, form.password)
     loading.value = false
 
     if (result.ok) {
-      toast.success('تم تسجيل الدخول بنجاح')
-      const redirect = auth.returnUrl || '/'
-      auth.returnUrl = null
-      router.push(redirect)
+      toast.success('تم تغيير كلمة المرور بنجاح')
+      router.push('/login')
     } else {
       errorMsg.value = result.error
     }
   }, 400)
 }
-
 </script>
 
 <style scoped>
@@ -372,7 +414,7 @@ function handleLogin() {
 }
 
 /* ═══════════════════════════════════
-   ERROR / SUCCESS MESSAGES
+   ERROR MESSAGE
    ═══════════════════════════════════ */
 .auth-error {
   display: flex;
@@ -389,21 +431,14 @@ function handleLogin() {
 }
 
 /* ═══════════════════════════════════
-   FORGOT LINK
+   LOADING STATE
    ═══════════════════════════════════ */
-.forgot-link {
-  display: block;
-  color: var(--primary, #f97316);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-decoration: none;
-  margin-bottom: 1.5rem;
-  transition: color 0.2s;
-}
-
-.forgot-link:hover {
-  color: var(--primary-dark, #ea580c);
-  text-decoration: underline;
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+  font-size: 1.5rem;
+  color: #94a3b8;
 }
 
 /* ═══════════════════════════════════
@@ -455,6 +490,9 @@ function handleLogin() {
 }
 
 .switch-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--primary, #f97316);
   font-weight: 700;
   text-decoration: none;

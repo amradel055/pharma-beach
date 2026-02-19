@@ -35,6 +35,18 @@ const routes = [
         component: () => import('@/views/RegisterView.vue'),
         meta: { title: 'إنشاء حساب', guest: true },
       },
+      {
+        path: 'forgot-password',
+        name: 'forgot-password',
+        component: () => import('@/views/ForgotPasswordView.vue'),
+        meta: { title: 'نسيت كلمة المرور', guest: true },
+      },
+      {
+        path: 'reset-password',
+        name: 'reset-password',
+        component: () => import('@/views/ResetPasswordView.vue'),
+        meta: { title: 'إعادة تعيين كلمة المرور' },
+      },
     ],
   },
 
